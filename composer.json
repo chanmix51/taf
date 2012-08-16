@@ -1,0 +1,6 @@
+{
+    "minimum-stability": "dev",
+    "require": {
+        "ghub/pomm-service-provider": "dev-master"
+    }
+}
