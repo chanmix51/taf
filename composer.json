@@ -1,6 +1,7 @@
 {
     "minimum-stability": "dev",
     "require": {
-        "ghub/pomm-service-provider": "dev-master"
+        "ghub/pomm-service-provider": "dev-master",
+        "twig/twig": "dev-master"
     }
 }

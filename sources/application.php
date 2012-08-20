@@ -5,7 +5,6 @@ $app = require "bootstrap.php";
 // GET "/" index 
 $app->get('/', function() use ($app) {
     $app['pomm.connection']
-        ->getDatabase()
         ->executeAnonymousQuery('SELECT true');
 
     return $app['twig']->render('index.html.twig');
