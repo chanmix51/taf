@@ -1,10 +1,10 @@
 <?php
 
-namespace \DumbDb\Tree;
+namespace Taf\Taf;
 
 use \Pomm\Object\BaseObject;
 use \Pomm\Exception\Exception;
 
-class Node extends BaseObject
+class FinishedTask extends BaseObject
 {
 }

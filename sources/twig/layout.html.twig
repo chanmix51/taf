@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title> TAF - {% block title %}The ultimate dead simple Task Manager{% endblock %}</title>
+    <meta name="robots" content="index, follow, all" /> 
+    <meta name="Author" content="Grégoire HUBERT" /> 
+    <meta name="Language" content="en"/> 
+    <meta name="Copyright" content="Grégoire HUBERT" /> 
+    <meta name="Publisher" content="Grégoire HUBERT" /> 
+    <meta name="Description" content="TAF - The ultimate dead simple Task Manager" /> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="/css/main.css" rel="stylesheet">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js"></script>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span12">
+          <h1>Trucs À Faire</h1>
+          <div class="span8">
+          {% block content %}CONTENT{% endblock %}
+          </div>
+          <div class="span4">
+          <h2>Quick lists</h2>
+          <h3>Suspended tasks</h3>
+          {% block suspended_tasks %}suspended{% endblock %}
+          <hr />
+          <h3>Last finished tasks</h3>
+          {% block finished_tasks %}finished{% endblock %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      $('#active_tasks').sortable({
+        handle: "i", 
+        placeholder: "ui-state-highlight",
+        forcePlaceholderSize: true,
+        stop: function(event, ui) {
+          $.post(
+          "/tasks/move",
+          {
+            taskId: ui.item.attr('id').substr(12),
+            newRank: $(this).find('li').length - ui.item.index()
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

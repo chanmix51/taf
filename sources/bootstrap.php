@@ -8,7 +8,7 @@ require PROJECT_DIR.'/sources/config/environment.php';
 
 // autoloader
 $loader = require PROJECT_DIR.'/vendor/autoload.php';
-$loader->add('MyDb', PROJECT_DIR.'/sources/model');
+$loader->add('Taf', PROJECT_DIR.'/sources/model');
 
 $app = new Silex\Application();
 

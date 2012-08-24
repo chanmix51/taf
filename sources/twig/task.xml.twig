@@ -1,0 +1,19 @@
+<taf_response>
+  <query method="GET">
+    <parameter name="slug">{{ slug }}</parameter>
+  </query>
+  <response>
+  {% if task is defined %}
+    <task id="{{ task.id }}">
+      <rank>{{ task.rank }}</rank>
+      <title>{{ task.title }}</title>
+      <slug>{{ task.slug }}</slug>
+      <work_time>{{ task.work_time }}</work_time>
+    </task>
+  {% else %}
+    <error>
+      <msg>No task could be found with that slug.</msg>
+    </error>
+  {% endif %}
+  </response>
+</taf_response>

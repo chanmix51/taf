@@ -12,6 +12,7 @@ SET client_min_messages = warning;
 -- Name: taf; Type: SCHEMA; Schema: -; Owner: -
 --
 
+DROP SCHEMA taf CASCADE;
 CREATE SCHEMA taf;
 
 
@@ -21,70 +22,75 @@ SET search_path = taf, pg_catalog;
 -- Name: after_insert_delete_active_task(); Type: FUNCTION; Schema: taf; Owner: -
 --
 
-CREATE FUNCTION after_insert_delete_active_task() RETURNS trigger
+CREATE OR REPLACE FUNCTION taf.after_insert_delete_active_task() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
+  PERFORM taf.reorder_tasks();
+
+  RETURN NEW;
+END;
+$$;
+
+--
+-- Name: before_insert_active_task(); Type: FUNCTION; Schema: taf; Owner: -
+--
+
+CREATE OR REPLACE FUNCTION before_insert_active_task() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- manage ranking if not provided 
+    IF NEW.rank IS NULL THEN
+         NEW.rank := max(t.rank) + 1 FROM taf.active_task t;
+    ELSE
+        UPDATE taf.active_task t SET rank = rank + 1 WHERE t.rank >= NEW.rank;
+    END IF;
+
+    -- generate slug if not provided
+    IF NEW.slug IS NULL THEN
+      NEW.slug := slugify(NEW.title);
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: active_task; Type: TABLE; Schema: taf; Owner: -; Tablespace: 
+--
+
+CREATE TABLE active_task (
+    id integer NOT NULL,
+    rank integer,
+    title character varying NOT NULL,
+    slug character varying NOT NULL,
+    work_time integer DEFAULT 0 NOT NULL
+);
+
+
+--
+-- Name: reorder_tasks(); Type: FUNCTION; Schema: taf; Owner: -
+--
+
+CREATE FUNCTION reorder_tasks() RETURNS SETOF active_task
+    LANGUAGE sql
+    AS $$
   WITH
     order_task AS (
       SELECT
         id,
-        row_number() OVER (ORDER BY rank ASC) AS rank,
-        title,
-        slug,
-        work_time
+        row_number() OVER (ORDER BY rank ASC) AS rank
       FROM
         active_task
   )
-  UPDATE active_task t SET rank = ot.rank FROM order_task ot WHERE t.id = ot.id;
-
-  RETURN NEW;
-END;
-$$;
-
-
---
--- Name: after_insert_task(); Type: FUNCTION; Schema: taf; Owner: -
---
-
-CREATE FUNCTION after_insert_task() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-  WITH
-    order_task AS (
-      SELECT
-        id,
-        row_number() OVER (ORDER BY rank ASC) AS rank,
-        title,
-        slug,
-        finished_at,
-        suspended_at,
-        work_time
-      FROM
-        task
-  )
-  UPDATE task t SET rank = ot.rank FROM order_task ot WHERE t.id = ot.id;
-
-  RETURN NEW;
-END;
-$$;
-
-
---
--- Name: before_insert_task(); Type: FUNCTION; Schema: taf; Owner: -
---
-
-CREATE FUNCTION before_insert_task() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-  IF NEW.slug IS NULL THEN
-    NEW.slug := slugify(NEW.title);
-  END IF;
-
-  RETURN NEW;
-END;
+  UPDATE active_task t SET rank = ot.rank FROM order_task ot WHERE t.id = ot.id RETURNING t.*;
 $$;
 
 
@@ -92,10 +98,10 @@ $$;
 -- Name: slugify(character varying); Type: FUNCTION; Schema: taf; Owner: -
 --
 
-CREATE FUNCTION slugify(character varying) RETURNS character varying
+CREATE OR REPLACE FUNCTION slugify(character varying) RETURNS character varying
     LANGUAGE sql
     AS $_$
-SELECT substring(md5(to_hex(extract(millisecond from now())::int4)||CAST(random() AS varchar)), 0, 4)||'-'||trim(both '-' from regexp_replace(lower(transliterate($1)), '[^a-z0-9]+', '-', 'g'));
+SELECT trim(both '-' from regexp_replace(lower(transliterate($1)), '[^a-z0-9]+', '-', 'g'))||'-'||substring(md5(to_hex(extract(millisecond from now())::int4)||CAST(random() AS varchar)), 0, 4);
 $_$;
 
 
@@ -123,23 +129,6 @@ CREATE FUNCTION transliterate(my_text character varying) RETURNS character varyi
 $$;
 
 
-SET default_tablespace = '';
-
-SET default_with_oids = false;
-
---
--- Name: active_task; Type: TABLE; Schema: taf; Owner: -; Tablespace: 
---
-
-CREATE TABLE active_task (
-    id integer NOT NULL,
-    rank integer,
-    title character varying NOT NULL,
-    slug character varying NOT NULL,
-    work_time integer DEFAULT 0 NOT NULL
-);
-
-
 --
 -- Name: update_rank_active_task(integer, integer); Type: FUNCTION; Schema: taf; Owner: -
 --
@@ -147,8 +136,20 @@ CREATE TABLE active_task (
 CREATE FUNCTION update_rank_active_task(integer, integer) RETURNS SETOF active_task
     LANGUAGE sql
     AS $_$
-UPDATE active_task at SET rank = at.rank + 1 FROM active_task t WHERE at.rank >= $2 AND t.id = $1 AND at.rank < t.rank;
-UPDATE active_task SET rank = $2 WHERE id = $1 RETURNING *;
+    UPDATE 
+        taf.active_task at 
+    SET 
+        rank = at.rank + ( (t.rank - $2) / abs(t.rank - $2) )
+    FROM 
+        taf.active_task t 
+    WHERE 
+            t.id = $1 
+        AND 
+            at.rank >= least($2, t.rank)
+        AND 
+            at.rank <= greatest($2, t.rank)
+            ;
+    UPDATE taf.active_task SET rank = $2 WHERE id = $1 RETURNING *;
 $_$;
 
 
@@ -232,14 +233,14 @@ ALTER TABLE ONLY suspended_task
 -- Name: after_insert_delete_active_task_trig; Type: TRIGGER; Schema: taf; Owner: -
 --
 
-CREATE TRIGGER after_insert_delete_active_task_trig AFTER INSERT OR DELETE ON active_task FOR EACH STATEMENT EXECUTE PROCEDURE after_insert_delete_active_task();
+CREATE TRIGGER after_insert_delete_active_task_trig AFTER INSERT OR DELETE ON taf.active_task FOR EACH STATEMENT EXECUTE PROCEDURE taf.after_insert_delete_active_task();
 
 
 --
 -- Name: before_insert_task_trig; Type: TRIGGER; Schema: taf; Owner: -
 --
 
-CREATE TRIGGER before_insert_task_trig BEFORE INSERT ON active_task FOR EACH ROW EXECUTE PROCEDURE before_insert_task();
+CREATE TRIGGER before_insert_task_trig BEFORE INSERT ON taf.active_task FOR EACH ROW EXECUTE PROCEDURE taf.before_insert_active_task();
 
 
 --

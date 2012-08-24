@@ -6,8 +6,8 @@
 // pomm database configuration
 $app['config.pomm.dsn'] = array(
     'prod' => array(), 
-    'cli' => array('my_db' => array('dsn' => 'pgsql://dumb_user@!/var/lib/lxc/java/rootfs/tmp!/dumb_db')),
-    'dev' => array('my_db' => array('dsn' => 'pgsql://dumb_user@172.17.0.3:5432/dumb_db')),
+    'cli' => array('my_db' => array('dsn' => 'pgsql://dumb_user@!/var/lib/lxc/java/rootfs/tmp!/dumb_db', 'name' => 'taf')),
+    'dev' => array('my_db' => array('dsn' => 'pgsql://dumb_user@172.17.0.3:5432/dumb_db', 'name' => 'taf')),
 );
 
 // put your configuration here

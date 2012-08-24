@@ -1,0 +1,33 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}Your tasks{% endblock %}
+
+{% block content %}
+<ul id="active_tasks">
+{% for task in active_tasks %}
+  <li id="active_task_{{ task.id }}"><i class="icon-move"></i>{{ task.title }}</li>
+{% else %}
+  <li>No tasks found… Good job !</li>
+{% endfor %}
+</ul>
+{% endblock %}
+
+{% block suspended_tasks %}
+<ul>
+{% for task in suspended_tasks %}
+  <li>{{ task.title }}</li>
+{% else %}
+  <li>None</li>
+{% endfor %}
+</ul>
+{% endblock %}
+
+{% block finished_tasks %}
+<ul>
+{% for task in finished_tasks %}
+  <li>{{ task.title }}</li>
+{% else %}
+  <li>None</li>
+{% endfor %}
+</ul>
+{% endblock %}
