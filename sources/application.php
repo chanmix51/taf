@@ -129,4 +129,37 @@ $app->post('/task/{id}/unfinish', function($id) use ($app) {
 
 })->bind('unfinish');
 
+$app->post('/task/new', function(Request $request) use ($app) {
+    try
+    {
+    $active_task = $app['pomm.connection']
+        ->getMapFor('\Taf\Taf\ActiveTask')
+        ->createAndSaveObject($request->request->get('task'));
+    } 
+    catch (\Pomm\Exception\Exception $e)
+    {
+        return new Response('Unable to save new task.', 400);
+    }
+
+    return $app->json(array('active_task' => $active_task->extract()));
+})->bind('create');
+
+$app->put('/task/{id}/add_time', function(Request $request, $id) use ($app) {
+    if (!$request->request->has('work_time'))
+    {
+        return new Response(sprintf("No 'work_time' parameter."), 400);
+    }
+
+    $task = $app['pomm.connection']
+        ->getMapFor('\Taf\Taf\ActiveTask')
+        ->findByPkAndUpdateTime($id, $request->request->get('work_time'));
+
+    if ($task === false)
+    {
+        return new Response(sprintf("Bad task id = '%d'.", $id), 404);
+    }
+
+    return $app->json(array('active_task' => $task->extract()));
+})->bind('set_work_time');
+
 return $app;

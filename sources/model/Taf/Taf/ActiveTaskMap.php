@@ -97,4 +97,16 @@ OESQL;
 
     return $this->query($sql, array($id))->current();
   }
+
+  public function findByPkAndUpdateTime($id, $time)
+  {
+    $sql = "UPDATE %s SET work_time = work_time + %d WHERE id = ? RETURNING %s";
+    $sql = sprintf($sql,
+      $this->getTableName(),
+      $time,
+      $this->joinSelectFieldsWithAlias()
+    );
+
+    return $this->query($sql, array($id))->current();
+  }
 }
