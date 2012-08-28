@@ -49,7 +49,7 @@ BEGIN
 
     -- generate slug if not provided
     IF NEW.slug IS NULL THEN
-      NEW.slug := slugify(NEW.title);
+      NEW.slug := taf.slugify(NEW.title);
     END IF;
 
     RETURN NEW;
@@ -101,7 +101,7 @@ $$;
 CREATE OR REPLACE FUNCTION slugify(character varying) RETURNS character varying
     LANGUAGE sql
     AS $_$
-SELECT trim(both '-' from regexp_replace(lower(transliterate($1)), '[^a-z0-9]+', '-', 'g'))||'-'||substring(md5(to_hex(extract(millisecond from now())::int4)||CAST(random() AS varchar)), 0, 4);
+SELECT trim(both '-' from regexp_replace(lower(taf.transliterate($1)), '[^a-z0-9]+', '-', 'g'))||'-'||substring(md5(to_hex(extract(millisecond from now())::int4)||CAST(random() AS varchar)), 0, 4);
 $_$;
 
 
