@@ -6,19 +6,35 @@ use Symfony\Component\HttpFoundation\Request;
 $app = require "bootstrap.php";
 
 // GET "/" index 
-$app->get('/task/{slug}.json', function($slug) use ($app) {
+$app->get('/task/{status}/{slug}.json', function($status, $slug) use ($app) {
+
+    switch($status)
+    {
+    case "active":
+        $model_class = '\Taf\Taf\ActiveTask';
+        break;
+    case "suspended":
+        $model_class = '\Taf\Taf\SuspendedTask';
+        break;
+    case "finished":
+        $model_class = '\Taf\Taf\FinishedTask';
+        break;
+    default:
+        return new Response(sprintf("Unknown status'%s'. Status may be one of 'active', 'suspended' or 'finished'.", $status), 404);
+    }
+
     $task = $app['pomm.connection']
-        ->getMapFor('\Taf\Taf\ActiveTask')
+        ->getMapFor($model_class)
         ->findWhere("slug = ?", array($slug))
         ->current();
 
     if ($task === false)
     {
-        return new Response(sprintf("Could not find task with slug '%s'.", $slug), 404);
+        return new Response(sprintf("Could not find task with status '%s' and slug '%s'.", $status, $slug), 404);
     }
     else
     {
-        return $app->json(array('active_task' => $task->extract()));
+        return $app->json(array(sprintf('%s_task', $status) => $task->extract()));
     }
 })->bind('show');
 
