@@ -6,29 +6,21 @@ use Symfony\Component\HttpFoundation\Request;
 $app = require "bootstrap.php";
 
 // GET "/" index 
-$app->get('/task/{slug}.{ext}', function($slug, $ext) use ($app) {
-    if ( ! in_array($ext, array('html', 'json', 'xml')) )
-    {
-        return new Response(sprintf("No such format '%s' (valid formats are html, json, xml.", $ext), 404);
-    }
-
+$app->get('/task/{slug}.json', function($slug) use ($app) {
     $task = $app['pomm.connection']
         ->getMapFor('\Taf\Taf\ActiveTask')
         ->findWhere("slug = ?", array($slug))
         ->current();
 
-    if (!$task)
+    if ($task === false)
     {
         return new Response(sprintf("Could not find task with slug '%s'.", $slug), 404);
     }
     else
     {
-        return $app['twig']->render(sprintf('task.%s.twig', $ext), array('task' => $task));
+        return $app->json(array('active_task' => $task->extract()));
     }
 })->bind('show');
-
-$app->get('/', function() use ($app) {
-})->bind('homepage');
 
 $app->get('/tasks/list', function(Request $request) use ($app) {
     $data = array();
