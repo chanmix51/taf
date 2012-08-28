@@ -28,7 +28,7 @@ $app->register(new Provider\SessionServiceProvider());
 $app->register(new Provider\TwigServiceProvider(), array(
     'twig.path' => array(PROJECT_DIR.'/sources/twig'),
 ));
-$app->register(new GHub\Silex\Pomm\PommServiceProvider(), array(
+$app->register(new Pomm\Silex\PommServiceProvider(), array(
     'pomm.databases' => $app['config.pomm.dsn'][ENV]
 ));
 
