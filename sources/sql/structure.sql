@@ -79,7 +79,7 @@ CREATE TABLE active_task (
 -- Name: reorder_tasks(); Type: FUNCTION; Schema: taf; Owner: -
 --
 
-CREATE FUNCTION reorder_tasks() RETURNS SETOF active_task
+CREATE OR REPLACE FUNCTION taf.reorder_tasks() RETURNS SETOF taf.active_task
     LANGUAGE sql
     AS $$
   WITH
@@ -88,9 +88,9 @@ CREATE FUNCTION reorder_tasks() RETURNS SETOF active_task
         id,
         row_number() OVER (ORDER BY rank ASC) AS rank
       FROM
-        active_task
+        taf.active_task
   )
-  UPDATE active_task t SET rank = ot.rank FROM order_task ot WHERE t.id = ot.id RETURNING t.*;
+  UPDATE taf.active_task t SET rank = ot.rank FROM order_task ot WHERE t.id = ot.id RETURNING t.*;
 $$;
 
 
