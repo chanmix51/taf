@@ -42,9 +42,9 @@ CREATE OR REPLACE FUNCTION before_insert_active_task() RETURNS trigger
 BEGIN
     -- manage ranking if not provided 
     IF NEW.rank IS NULL THEN
-         NEW.rank := max(t.rank) + 1 FROM taf.active_task t;
+         NEW.rank := max(t.rank) + 1 FROM taf.active_task t WHERE t.worker_id = NEW.worker_id;
     ELSE
-        UPDATE taf.active_task t SET rank = rank + 1 WHERE t.rank >= NEW.rank;
+        UPDATE taf.active_task t SET rank = rank + 1 WHERE t.rank >= NEW.rank AND t.worker_id = NEW.worker_id;
     END IF;
 
     -- generate slug if not provided
@@ -79,18 +79,18 @@ CREATE TABLE active_task (
 -- Name: reorder_tasks(); Type: FUNCTION; Schema: taf; Owner: -
 --
 
-CREATE OR REPLACE FUNCTION taf.reorder_tasks() RETURNS SETOF taf.active_task
+CREATE OR REPLACE FUNCTION taf.reorder_tasks() RETURNS void
     LANGUAGE sql
     AS $$
   WITH
     order_task AS (
       SELECT
         id,
-        row_number() OVER (ORDER BY rank ASC) AS rank
+        row_number() OVER (PARTITION BY worker_id ORDER BY rank ASC) AS rank
       FROM
         taf.active_task
   )
-  UPDATE taf.active_task t SET rank = ot.rank FROM order_task ot WHERE t.id = ot.id RETURNING t.*;
+  UPDATE taf.active_task t SET rank = ot.rank FROM order_task ot WHERE t.id = ot.id AND t.rank <> ot.rank;
 $$;
 
 
@@ -133,7 +133,10 @@ $$;
 -- Name: update_rank_active_task(integer, integer); Type: FUNCTION; Schema: taf; Owner: -
 --
 
-CREATE FUNCTION update_rank_active_task(integer, integer) RETURNS SETOF active_task
+-- $1 id of the active_task to move
+-- $2 new rank to be set
+
+CREATE OR REPLACE FUNCTION update_rank_active_task(integer, integer) RETURNS SETOF taf.active_task
     LANGUAGE sql
     AS $_$
     UPDATE 
@@ -148,6 +151,8 @@ CREATE FUNCTION update_rank_active_task(integer, integer) RETURNS SETOF active_t
             at.rank >= least($2, t.rank)
         AND 
             at.rank <= greatest($2, t.rank)
+        AND
+            at.worker_id = t.worker_id
             ;
     UPDATE taf.active_task SET rank = $2 WHERE id = $1 RETURNING *;
 $_$;
