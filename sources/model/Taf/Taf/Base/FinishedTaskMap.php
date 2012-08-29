@@ -18,6 +18,9 @@ abstract class FinishedTaskMap extends BaseObjectMap
         $this->addField('slug', 'varchar');
         $this->addField('work_time', 'int4');
         $this->addField('created_at', 'timestamp');
+        $this->addField('block_stack', 'json');
+        $this->addField('changed_at', 'timestamp');
+        $this->addField('worker_id', 'int4');
 
         $this->pk_fields = array('id');
     }

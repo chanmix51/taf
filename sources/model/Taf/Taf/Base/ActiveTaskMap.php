@@ -18,6 +18,9 @@ abstract class ActiveTaskMap extends BaseObjectMap
         $this->addField('title', 'varchar');
         $this->addField('slug', 'varchar');
         $this->addField('work_time', 'int4');
+        $this->addField('block_stack', 'json');
+        $this->addField('created_at', 'timestamp');
+        $this->addField('worker_id', 'int4');
 
         $this->pk_fields = array('id');
     }
