@@ -5,7 +5,32 @@ use Symfony\Component\HttpFoundation\Request;
 
 $app = require "bootstrap.php";
 
-// GET "/" index 
+// MIDDLEWARES
+$must_be_logged = function() use ($app) {
+    if (!$app['request']->request->has('session_token'))
+    {
+        return $app->redirect($app['url_generator']->generate('homepage'));
+    }
+
+    $worker = $app['pomm.connection']
+        ->getMapFor('\Taf\Taf\Worker')
+        ->findWhere("session_token = ? AND session_start + interval '1800 seconds' > now()", array($app['request']->request->get('session_token')))
+        ->current();
+
+    if ($worker === false)
+    {
+        return $app->redirect($app['url_generator']->generate('homepage'));
+    }
+};
+
+$must_be_ajax = function() use ($app) {
+    if (!$app['request']->isXmlHttpRequest())
+    {
+        return new Response("Not found.", 404);
+    }
+};
+
+// CONTROLLERS
 $app->get('/task/{status}/{slug}.json', function($status, $slug) use ($app) {
 
     switch($status)
@@ -36,7 +61,7 @@ $app->get('/task/{status}/{slug}.json', function($status, $slug) use ($app) {
     {
         return $app->json(array(sprintf('%s_task', $status) => $task->extract()));
     }
-})->bind('show');
+})->bind('show')->before($must_be_ajax);
 
 $app->get('/tasks/list', function(Request $request) use ($app) {
     $data = array();
@@ -66,9 +91,15 @@ $app->get('/tasks/list', function(Request $request) use ($app) {
     }
 
     return $app->json($data);
-})->bind('list');
+})->bind('list')->before($must_be_ajax);
 
 $app->post('/tasks/move', function(Request $request) use ($app) {
+
+    if (!($request->request->has('newRank') and $request->request->has('taskId')))
+    {
+        return new Response("Expected parameters 'taskId' and 'newRank'.", 400);
+    }
+
     $tasks = $app['pomm.connection']
         ->getMapFor('\Taf\Taf\ActiveTask')
         ->moveTask($request->request->get('taskId'), $request->request->get('newRank'))
@@ -79,7 +110,7 @@ $app->post('/tasks/move', function(Request $request) use ($app) {
     }
 
     return new Response('ok', 201);
-})->bind('task_move');
+})->bind('task_move')->before($must_be_ajax);
 
 $app->post('/task/{id}/suspend', function($id) use ($app) {
     $suspended_task = $app['pomm.connection']
@@ -93,7 +124,7 @@ $app->post('/task/{id}/suspend', function($id) use ($app) {
 
     return $app->json(array('suspended_task' => $suspended_task->extract()));
 
-})->bind('suspend');
+})->bind('suspend')->before($must_be_ajax);
 
 $app->post('/task/{id}/unsuspend', function($id) use ($app) {
     $active_task = $app['pomm.connection']
@@ -107,7 +138,7 @@ $app->post('/task/{id}/unsuspend', function($id) use ($app) {
 
     return $app->json(array('active_task' => $active_task->extract()));
 
-})->bind('unsuspend');
+})->bind('unsuspend')->before($must_be_ajax);
 
 $app->post('/task/{id}/finish', function($id) use ($app) {
     $finished_task = $app['pomm.connection']
@@ -121,7 +152,7 @@ $app->post('/task/{id}/finish', function($id) use ($app) {
 
     return $app->json(array('finished_task' => $finished_task->extract()));
 
-})->bind('finish');
+})->bind('finish')->before($must_be_ajax);
 
 $app->post('/task/{id}/unfinish', function($id) use ($app) {
     $active_task = $app['pomm.connection']
@@ -135,7 +166,7 @@ $app->post('/task/{id}/unfinish', function($id) use ($app) {
 
     return $app->json(array('active_task' => $active_task->extract()));
 
-})->bind('unfinish');
+})->bind('unfinish')->before($must_be_ajax);
 
 $app->post('/task/new', function(Request $request) use ($app) {
     try
@@ -150,7 +181,7 @@ $app->post('/task/new', function(Request $request) use ($app) {
     }
 
     return $app->json(array('active_task' => $active_task->extract()));
-})->bind('create');
+})->bind('create')->before($must_be_ajax);
 
 $app->put('/task/{id}/add_time', function(Request $request, $id) use ($app) {
     if (!$request->request->has('work_time'))
@@ -168,6 +199,6 @@ $app->put('/task/{id}/add_time', function(Request $request, $id) use ($app) {
     }
 
     return $app->json(array('active_task' => $task->extract()));
-})->bind('set_work_time');
+})->bind('set_work_time')->before($must_be_ajax);
 
 return $app;
