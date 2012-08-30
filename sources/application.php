@@ -31,7 +31,7 @@ $must_be_ajax = function() use ($app) {
 };
 
 // CONTROLLERS
-$app->get('/task/{status}/{slug}.json', function($status, $slug) use ($app) {
+$app->get('/task/{status}/{slug}', function($status, $slug) use ($app) {
 
     switch($status)
     {
