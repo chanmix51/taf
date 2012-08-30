@@ -1,7 +1,8 @@
 {
     "minimum-stability": "dev",
     "require": {
-        "ghub/pomm-service-provider": "dev-master",
+        "pomm/pomm-service-provider": "dev-master",
+        "fp/lightopenid": "dev-master",
         "twig/twig": "dev-master"
     }
 }
