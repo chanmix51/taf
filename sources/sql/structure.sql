@@ -63,10 +63,70 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
+-- Name: worker; Type: TABLE; Schema: taf; Owner: dumb_user; Tablespace: 
+--
+
+CREATE TABLE taf.worker (
+    worker_id integer NOT NULL,
+    email email_address NOT NULL,
+    first_name character varying NOT NULL,
+    last_name character varying NOT NULL,
+    session_token char(32),
+    session_start timestamp
+);
+
+
+--
+-- Name: worker_id_seq; Type: SEQUENCE; Schema: taf; Owner: dumb_user
+--
+
+CREATE SEQUENCE taf.worker_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: worker_id_seq; Type: SEQUENCE OWNED BY; Schema: taf; Owner: dumb_user
+--
+
+ALTER SEQUENCE worker_id_seq OWNED BY worker.worker_id;
+
+
+--
+-- Name: worker_id; Type: DEFAULT; Schema: taf; Owner: dumb_user
+--
+
+ALTER TABLE ONLY worker ALTER COLUMN worker_id SET DEFAULT nextval('worker_id_seq'::regclass);
+
+
+--
+-- Name: worker_email_key; Type: CONSTRAINT; Schema: taf; Owner: dumb_user; Tablespace: 
+--
+
+ALTER TABLE ONLY worker
+    ADD CONSTRAINT worker_email_key UNIQUE (email);
+
+
+--
+-- Name: worker_pkey; Type: CONSTRAINT; Schema: taf; Owner: dumb_user; Tablespace: 
+--
+
+ALTER TABLE ONLY worker
+    ADD CONSTRAINT worker_pkey PRIMARY KEY (worker_id);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+--
 -- Name: active_task; Type: TABLE; Schema: taf; Owner: -; Tablespace: 
 --
 
-CREATE TABLE active_task (
+CREATE taf.TABLE active_task (
     id integer NOT NULL,
     rank integer,
     title character varying NOT NULL,
@@ -162,7 +222,7 @@ $_$;
 -- Name: active_task_id_seq; Type: SEQUENCE; Schema: taf; Owner: -
 --
 
-CREATE SEQUENCE active_task_id_seq
+CREATE taf.SEQUENCE active_task_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -181,7 +241,7 @@ ALTER SEQUENCE active_task_id_seq OWNED BY active_task.id;
 -- Name: finished_task; Type: TABLE; Schema: taf; Owner: -; Tablespace: 
 --
 
-CREATE TABLE finished_task (
+CREATE TABLE taf.finished_task (
     id integer NOT NULL,
     title character varying NOT NULL,
     slug character varying NOT NULL,
@@ -194,7 +254,7 @@ CREATE TABLE finished_task (
 -- Name: suspended_task; Type: TABLE; Schema: taf; Owner: -; Tablespace: 
 --
 
-CREATE TABLE suspended_task (
+CREATE TABLE taf.suspended_task (
     id integer NOT NULL,
     title character varying NOT NULL,
     slug character varying NOT NULL,
