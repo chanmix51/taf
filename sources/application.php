@@ -24,13 +24,14 @@ $must_be_logged = function() use ($app) {
 };
 
 $must_be_ajax = function() use ($app) {
-    if (!$app['request']->isXmlHttpRequest())
+    if (ENV == 'prod' && !$app['request']->isXmlHttpRequest())
     {
         return new Response("Not found.", 404);
     }
 };
 
 // CONTROLLERS
+
 $app->get('/task/{status}/{slug}', function($status, $slug) use ($app) {
 
     switch($status)
