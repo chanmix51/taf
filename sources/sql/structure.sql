@@ -19,6 +19,13 @@ CREATE SCHEMA taf;
 SET search_path = taf, pg_catalog;
 
 --
+-- Name: email_address; Type: DOMAIN; Schema: taf; Owner: -
+--
+
+CREATE DOMAIN taf.email_address AS character varying
+	CONSTRAINT email_address_check CHECK (((VALUE)::text ~* '^([^@\s]+)@((?:[a-z0-9-]+\.)+[a-z]{2,})$'::text));
+
+--
 -- Name: after_insert_delete_active_task(); Type: FUNCTION; Schema: taf; Owner: -
 --
 
