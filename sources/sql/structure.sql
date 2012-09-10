@@ -43,7 +43,7 @@ $$;
 -- Name: before_insert_active_task(); Type: FUNCTION; Schema: taf; Owner: -
 --
 
-CREATE OR REPLACE FUNCTION before_insert_active_task() RETURNS trigger
+CREATE OR REPLACE FUNCTION taf.before_insert_active_task() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -103,33 +103,6 @@ ALTER SEQUENCE worker_id_seq OWNED BY worker.worker_id;
 
 
 --
--- Name: worker_id; Type: DEFAULT; Schema: taf; Owner: dumb_user
---
-
-ALTER TABLE ONLY worker ALTER COLUMN worker_id SET DEFAULT nextval('worker_id_seq'::regclass);
-
-
---
--- Name: worker_email_key; Type: CONSTRAINT; Schema: taf; Owner: dumb_user; Tablespace:
---
-
-ALTER TABLE ONLY worker
-    ADD CONSTRAINT worker_email_key UNIQUE (email);
-
-
---
--- Name: worker_pkey; Type: CONSTRAINT; Schema: taf; Owner: dumb_user; Tablespace:
---
-
-ALTER TABLE ONLY worker
-    ADD CONSTRAINT worker_pkey PRIMARY KEY (worker_id);
-
-
---
--- PostgreSQL database dump complete
---
-
---
 -- Name: active_task; Type: TABLE; Schema: taf; Owner: -; Tablespace:
 --
 
@@ -138,7 +111,10 @@ CREATE TABLE taf.active_task (
     rank integer,
     title character varying NOT NULL,
     slug character varying NOT NULL,
-    work_time integer DEFAULT 0 NOT NULL
+    work_time integer DEFAULT 0 NOT NULL,
+    block_stack json DEFAULT '{"blocks": []}'::json NOT NULL,
+    created_at timestamp without time zone DEFAULT now(),
+    worker_id integer NOT NULL
 );
 
 
@@ -165,7 +141,7 @@ $$;
 -- Name: slugify(character varying); Type: FUNCTION; Schema: taf; Owner: -
 --
 
-CREATE OR REPLACE FUNCTION slugify(character varying) RETURNS character varying
+CREATE OR REPLACE FUNCTION taf.slugify(character varying) RETURNS character varying
     LANGUAGE sql
     AS $_$
 SELECT trim(both '-' from regexp_replace(lower(taf.transliterate($1)), '[^a-z0-9]+', '-', 'g'))||'-'||substring(md5(to_hex(extract(millisecond from now())::int4)||CAST(random() AS varchar)), 0, 4);
@@ -176,7 +152,7 @@ $_$;
 -- Name: transliterate(character varying); Type: FUNCTION; Schema: taf; Owner: -
 --
 
-CREATE FUNCTION transliterate(my_text character varying) RETURNS character varying
+CREATE FUNCTION taf.transliterate(my_text character varying) RETURNS character varying
     LANGUAGE plpgsql
     AS $$
     DECLARE
@@ -203,7 +179,7 @@ $$;
 -- $1 id of the active_task to move
 -- $2 new rank to be set
 
-CREATE OR REPLACE FUNCTION update_rank_active_task(integer, integer) RETURNS SETOF taf.active_task
+CREATE OR REPLACE FUNCTION taf.update_rank_active_task(integer, integer) RETURNS SETOF taf.active_task
     LANGUAGE sql
     AS $_$
     UPDATE
@@ -253,7 +229,10 @@ CREATE TABLE taf.finished_task (
     title character varying NOT NULL,
     slug character varying NOT NULL,
     work_time integer NOT NULL,
-    created_at timestamp without time zone DEFAULT now() NOT NULL
+    created_at timestamp without time zone NOT NULL,
+    block_stack json,
+    changed_at timestamp without time zone DEFAULT now(),
+    worker_id integer NOT NULL
 );
 
 
@@ -266,22 +245,48 @@ CREATE TABLE taf.suspended_task (
     title character varying NOT NULL,
     slug character varying NOT NULL,
     work_time integer NOT NULL,
-    created_at timestamp without time zone DEFAULT now() NOT NULL
+    created_at timestamp without time zone NOT NULL,
+    block_stack json,
+    changed_at timestamp without time zone DEFAULT now(),
+    worker_id integer NOT NULL
 );
+
+
+--
+-- Name: worker_id; Type: DEFAULT; Schema: taf; Owner: dumb_user
+--
+
+ALTER TABLE ONLY taf.worker ALTER COLUMN worker_id SET DEFAULT nextval('worker_id_seq'::regclass);
+
+
+--
+-- Name: worker_email_key; Type: CONSTRAINT; Schema: taf; Owner: dumb_user; Tablespace:
+--
+
+ALTER TABLE ONLY taf.worker
+    ADD CONSTRAINT worker_email_key UNIQUE (email);
+
+
+--
+-- Name: worker_pkey; Type: CONSTRAINT; Schema: taf; Owner: dumb_user; Tablespace:
+--
+
+ALTER TABLE ONLY taf.worker
+    ADD CONSTRAINT worker_pkey PRIMARY KEY (worker_id);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: taf; Owner: -
 --
 
-ALTER TABLE ONLY active_task ALTER COLUMN id SET DEFAULT nextval('active_task_id_seq'::regclass);
+ALTER TABLE ONLY taf.active_task ALTER COLUMN id SET DEFAULT nextval('active_task_id_seq'::regclass);
 
 
 --
 -- Name: active_task_pkey; Type: CONSTRAINT; Schema: taf; Owner: -; Tablespace:
 --
 
-ALTER TABLE ONLY active_task
+ALTER TABLE ONLY taf.active_task
     ADD CONSTRAINT active_task_pkey PRIMARY KEY (id);
 
 
@@ -289,7 +294,7 @@ ALTER TABLE ONLY active_task
 -- Name: finished_task_pkey; Type: CONSTRAINT; Schema: taf; Owner: -; Tablespace:
 --
 
-ALTER TABLE ONLY finished_task
+ALTER TABLE ONLY taf.finished_task
     ADD CONSTRAINT finished_task_pkey PRIMARY KEY (id);
 
 
@@ -297,8 +302,32 @@ ALTER TABLE ONLY finished_task
 -- Name: suspended_task_pkey; Type: CONSTRAINT; Schema: taf; Owner: -; Tablespace:
 --
 
-ALTER TABLE ONLY suspended_task
+ALTER TABLE ONLY taf.suspended_task
     ADD CONSTRAINT suspended_task_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: active_task_worker_id_fkey; Type: FK CONSTRAINT; Schema: taf; Owner: -
+--
+
+ALTER TABLE ONLY taf.active_task
+    ADD CONSTRAINT active_task_worker_id_fkey FOREIGN KEY (worker_id) REFERENCES worker(worker_id);
+
+
+--
+-- Name: finished_task_worker_id_fkey; Type: FK CONSTRAINT; Schema: taf; Owner: -
+--
+
+ALTER TABLE ONLY taf.finished_task
+    ADD CONSTRAINT finished_task_worker_id_fkey FOREIGN KEY (worker_id) REFERENCES worker(worker_id);
+
+
+--
+-- Name: suspended_task_worker_id_fkey; Type: FK CONSTRAINT; Schema: taf; Owner: -
+--
+
+ALTER TABLE ONLY taf.suspended_task
+    ADD CONSTRAINT suspended_task_worker_id_fkey FOREIGN KEY (worker_id) REFERENCES worker(worker_id);
 
 
 --
