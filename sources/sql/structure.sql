@@ -47,7 +47,7 @@ CREATE OR REPLACE FUNCTION before_insert_active_task() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-    -- manage ranking if not provided 
+    -- manage ranking if not provided
     IF NEW.rank IS NULL THEN
          NEW.rank := max(t.rank) + 1 FROM taf.active_task t WHERE t.worker_id = NEW.worker_id;
     ELSE
@@ -70,7 +70,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: worker; Type: TABLE; Schema: taf; Owner: dumb_user; Tablespace: 
+-- Name: worker; Type: TABLE; Schema: taf; Owner: dumb_user; Tablespace:
 --
 
 CREATE TABLE taf.worker (
@@ -110,7 +110,7 @@ ALTER TABLE ONLY worker ALTER COLUMN worker_id SET DEFAULT nextval('worker_id_se
 
 
 --
--- Name: worker_email_key; Type: CONSTRAINT; Schema: taf; Owner: dumb_user; Tablespace: 
+-- Name: worker_email_key; Type: CONSTRAINT; Schema: taf; Owner: dumb_user; Tablespace:
 --
 
 ALTER TABLE ONLY worker
@@ -118,7 +118,7 @@ ALTER TABLE ONLY worker
 
 
 --
--- Name: worker_pkey; Type: CONSTRAINT; Schema: taf; Owner: dumb_user; Tablespace: 
+-- Name: worker_pkey; Type: CONSTRAINT; Schema: taf; Owner: dumb_user; Tablespace:
 --
 
 ALTER TABLE ONLY worker
@@ -130,10 +130,10 @@ ALTER TABLE ONLY worker
 --
 
 --
--- Name: active_task; Type: TABLE; Schema: taf; Owner: -; Tablespace: 
+-- Name: active_task; Type: TABLE; Schema: taf; Owner: -; Tablespace:
 --
 
-CREATE taf.TABLE active_task (
+CREATE TABLE taf.active_task (
     id integer NOT NULL,
     rank integer,
     title character varying NOT NULL,
@@ -179,7 +179,7 @@ $_$;
 CREATE FUNCTION transliterate(my_text character varying) RETURNS character varying
     LANGUAGE plpgsql
     AS $$
-    DECLARE 
+    DECLARE
       text_out VARCHAR DEFAULT '';
     BEGIN
            text_out := my_text;
@@ -206,17 +206,17 @@ $$;
 CREATE OR REPLACE FUNCTION update_rank_active_task(integer, integer) RETURNS SETOF taf.active_task
     LANGUAGE sql
     AS $_$
-    UPDATE 
-        taf.active_task at 
-    SET 
+    UPDATE
+        taf.active_task at
+    SET
         rank = at.rank + ( (t.rank - $2) / abs(t.rank - $2) )
-    FROM 
-        taf.active_task t 
-    WHERE 
-            t.id = $1 
-        AND 
+    FROM
+        taf.active_task t
+    WHERE
+            t.id = $1
+        AND
             at.rank >= least($2, t.rank)
-        AND 
+        AND
             at.rank <= greatest($2, t.rank)
         AND
             at.worker_id = t.worker_id
@@ -229,7 +229,7 @@ $_$;
 -- Name: active_task_id_seq; Type: SEQUENCE; Schema: taf; Owner: -
 --
 
-CREATE taf.SEQUENCE active_task_id_seq
+CREATE SEQUENCE taf.active_task_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -245,7 +245,7 @@ ALTER SEQUENCE active_task_id_seq OWNED BY active_task.id;
 
 
 --
--- Name: finished_task; Type: TABLE; Schema: taf; Owner: -; Tablespace: 
+-- Name: finished_task; Type: TABLE; Schema: taf; Owner: -; Tablespace:
 --
 
 CREATE TABLE taf.finished_task (
@@ -258,7 +258,7 @@ CREATE TABLE taf.finished_task (
 
 
 --
--- Name: suspended_task; Type: TABLE; Schema: taf; Owner: -; Tablespace: 
+-- Name: suspended_task; Type: TABLE; Schema: taf; Owner: -; Tablespace:
 --
 
 CREATE TABLE taf.suspended_task (
@@ -278,7 +278,7 @@ ALTER TABLE ONLY active_task ALTER COLUMN id SET DEFAULT nextval('active_task_id
 
 
 --
--- Name: active_task_pkey; Type: CONSTRAINT; Schema: taf; Owner: -; Tablespace: 
+-- Name: active_task_pkey; Type: CONSTRAINT; Schema: taf; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY active_task
@@ -286,7 +286,7 @@ ALTER TABLE ONLY active_task
 
 
 --
--- Name: finished_task_pkey; Type: CONSTRAINT; Schema: taf; Owner: -; Tablespace: 
+-- Name: finished_task_pkey; Type: CONSTRAINT; Schema: taf; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY finished_task
@@ -294,7 +294,7 @@ ALTER TABLE ONLY finished_task
 
 
 --
--- Name: suspended_task_pkey; Type: CONSTRAINT; Schema: taf; Owner: -; Tablespace: 
+-- Name: suspended_task_pkey; Type: CONSTRAINT; Schema: taf; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY suspended_task
