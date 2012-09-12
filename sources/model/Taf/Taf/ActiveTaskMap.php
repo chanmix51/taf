@@ -25,7 +25,7 @@ class ActiveTaskMap extends BaseActiveTaskMap
     return $this->query(sprintf($sql, $this->joinSelectFieldsWithAlias()), array($task_id, $new_rank));
   }
 
-  public function unsuspendTask($id)
+  public function unsuspendTask($id, $rank = null)
   {
     $sql = <<<OESQL
 WITH
@@ -37,15 +37,15 @@ OESQL;
       $this->getSuspendedTaskMap()->getTableName(),
       $this->getSuspendedTaskMap()->joinSelectFieldsWithAlias(),
       $this->getTableName(), 
-      join(', ', $this->getTaskMap()->getSelectFields()),
-      $this->getTaskMap()->joinSelectFieldsWithAlias('nms'),
+      join(', ', array_merge($this->getTaskMap()->getSelectFields(), array('rank'))),
+      $this->getTaskMap()->joinSelectFieldsWithAlias('nms').', ?',
       $this->joinSelectFieldsWithAlias()
     );
 
-    return $this->query($sql, array($id))->current();
+    return $this->query($sql, array($id, $rank))->current();
   }
 
-  public function unfinishTask($id)
+  public function unfinishTask($id, $rank = null)
   {
     $sql = <<<OESQL
 WITH
@@ -57,12 +57,12 @@ OESQL;
       $this->getFinishedTaskMap()->getTableName(),
       $this->getFinishedTaskMap()->joinSelectFieldsWithAlias(),
       $this->getTableName(), 
-      join(', ', $this->getTaskMap()->getSelectFields()),
-      $this->getTaskMap()->joinSelectFieldsWithAlias('nmf'),
+      join(', ', array_merge($this->getTaskMap()->getSelectFields(), array('rank'))),
+      $this->getTaskMap()->joinSelectFieldsWithAlias('nmf').', ?',
       $this->joinSelectFieldsWithAlias()
     );
 
-    return $this->query($sql, array($id))->current();
+    return $this->query($sql, array($id, $rank))->current();
   }
 
   public function findByPkAndUpdateTime($id, $time)

@@ -114,7 +114,7 @@ $app->post('/task/{id}/suspend', function($id) use ($app) {
 $app->post('/task/{id}/unsuspend', function($id) use ($app) {
     $active_task = $app['pomm.connection']
         ->getMapFor('\Taf\Taf\ActiveTask')
-        ->unsuspendTask($id);
+        ->unsuspendTask($id, $app['request']->request->get('rank'));
 
     if ($active_task === false)
     {
@@ -142,7 +142,7 @@ $app->post('/task/{id}/finish', function($id) use ($app) {
 $app->post('/task/{id}/unfinish', function($id) use ($app) {
     $active_task = $app['pomm.connection']
         ->getMapFor('\Taf\Taf\ActiveTask')
-        ->unFinishTask($id);
+        ->unFinishTask($id, $app['request']->request->get('rank'));
 
     if ($active_task === false)
     {
