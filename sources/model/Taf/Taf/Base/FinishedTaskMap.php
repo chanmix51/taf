@@ -14,7 +14,7 @@ abstract class FinishedTaskMap extends \Taf\Taf\TaskMap
         $this->object_class =  'Taf\Taf\FinishedTask';
         $this->object_name  =  'taf.finished_task';
 
-        $this->addField('block_stack', 'json');
+        $this->addField('changed_since', 'timestamp');
 
         $this->pk_fields = array('task_id');
     }

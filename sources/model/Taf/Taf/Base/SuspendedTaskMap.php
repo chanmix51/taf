@@ -14,7 +14,7 @@ abstract class SuspendedTaskMap extends \Taf\Taf\TaskMap
         $this->object_class =  'Taf\Taf\SuspendedTask';
         $this->object_name  =  'taf.suspended_task';
 
-        $this->addField('block_stack', 'json');
+        $this->addField('changed_since', 'timestamp');
 
         $this->pk_fields = array('task_id');
     }

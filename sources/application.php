@@ -32,39 +32,23 @@ $must_be_ajax = function() use ($app) {
 
 // CONTROLLERS
 
-$app->get('/task/{status}/{slug}', function($status, $slug) use ($app) {
-
-    switch($status)
-    {
-    case "active":
-        $model_class = '\Taf\Taf\ActiveTask';
-        break;
-    case "suspended":
-        $model_class = '\Taf\Taf\SuspendedTask';
-        break;
-    case "finished":
-        $model_class = '\Taf\Taf\FinishedTask';
-        break;
-    default:
-        return new Response(sprintf("Unknown status'%s'. Status may be one of 'active', 'suspended' or 'finished'.", $status), 404);
-    }
+$app->get('/task/{slug}', function($slug) use ($app) {
 
     $task = $app['pomm.connection']
-        ->getMapFor($model_class)
-        ->findWhere("slug = ?", array($slug))
-        ->current();
+        ->getMapFor('\Taf\Taf\Task')
+        ->findBySlug($slug);
 
     if ($task === false)
     {
-        return new Response(sprintf("Could not find task with status '%s' and slug '%s'.", $status, $slug), 404);
+        return new Response(sprintf("Could not find task with slug '%s'.", $slug), 404);
     }
     else
     {
-        return $app->json(array(sprintf('%s_task', $status) => $task->extract()));
+        return $app->json(array(sprintf('%s', get_class($task)) => $task->extract()));
     }
 })->bind('show')->before($must_be_ajax);
 
-$app->get('/tasks/list', function(Request $request) use ($app) {
+$app->get('/tasks', function(Request $request) use ($app) {
     $data = array();
 
     if (!$request->query->has('status') || $request->query->get('status') == 'active')
