@@ -13,6 +13,7 @@ class TaskMap extends BaseTaskMap
     protected $suspended_task_map;
     protected $finished_task_map;
     protected $task_lnk_map;
+    protected $task_map;
 
     public function getActiveTaskMap(ActiveTaskMap $map = null)
     {
@@ -53,6 +54,21 @@ class TaskMap extends BaseTaskMap
 
         return $this->task_lnk_map;
     }
+
+  public function getTaskMap(TaskMap $map = null)
+  {
+      if (is_null($this->task_map))
+      {
+          $this->setTaskMap($map);
+      }
+
+      return $this->task_map;
+  }
+
+  public function setTaskMap(TaskMap $map = null)
+  {
+      $this->task_map = is_null($map) ? $this->connection->getMapFor('\Taf\Taf\Task') : $map;
+  }
 
     public function setActiveTaskMap(ActiveTaskMap $map = null)
     {

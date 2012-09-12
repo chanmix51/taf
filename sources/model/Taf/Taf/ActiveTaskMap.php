@@ -9,39 +9,6 @@ use \Pomm\Query\Where;
 
 class ActiveTaskMap extends BaseActiveTaskMap
 {
-  protected $suspended_task_map;
-  protected $finished_task_map;
-
-  public function setSuspendedTaskMap(SuspendedTaskMap $map = null)
-  {
-    $this->suspended_task_map = is_null($map) ? $this->connection->getMapFor('\Taf\Taf\SuspendedTask') : $map;
-  }
-
-  public function getSuspendedTaskMap(SuspendedTaskMap $map = null)
-  {
-    if (is_null($this->suspended_task_map))
-    {
-      $this->setSuspendedTaskMap($map);
-    }
-
-    return $this->suspended_task_map;
-  }
-
-  public function setFinishedTaskMap(FinishedTaskMap $map = null)
-  {
-    $this->finished_task_map = is_null($map) ? $this->connection->getMapFor('\Taf\Taf\FinishedTask') : $map;
-  }
-
-  public function getFinishedTaskMap(FinishedTaskMap $map = null)
-  {
-    if (is_null($this->finished_task_map))
-    {
-      $this->setFinishedTaskMap($map);
-    }
-
-    return $this->finished_task_map;
-  }
-
   public function getSelectFields($alias = null)
   {
     $fields = parent::getSelectFields($alias);
@@ -62,7 +29,7 @@ class ActiveTaskMap extends BaseActiveTaskMap
   {
     $sql = <<<OESQL
 WITH
-  no_more_suspended AS (DELETE FROM %s st WHERE st.id = ? RETURNING %s)
+  no_more_suspended AS (DELETE FROM %s st WHERE st.task_id = ? RETURNING %s)
   INSERT INTO %s (%s) SELECT %s FROM no_more_suspended nms RETURNING %s
 OESQL;
 
@@ -70,8 +37,8 @@ OESQL;
       $this->getSuspendedTaskMap()->getTableName(),
       $this->getSuspendedTaskMap()->joinSelectFieldsWithAlias(),
       $this->getTableName(), 
-      join(', ', $this->getSelectFields()),
-      $this->joinSelectFieldsWithAlias('nms'),
+      join(', ', $this->getTaskMap()->getSelectFields()),
+      $this->getTaskMap()->joinSelectFieldsWithAlias('nms'),
       $this->joinSelectFieldsWithAlias()
     );
 
@@ -82,7 +49,7 @@ OESQL;
   {
     $sql = <<<OESQL
 WITH
-  no_more_finished AS (DELETE FROM %s ft WHERE ft.id = ? RETURNING %s)
+  no_more_finished AS (DELETE FROM %s ft WHERE ft.task_id = ? RETURNING %s)
   INSERT INTO %s (%s) SELECT %s FROM no_more_finished nmf RETURNING %s
 OESQL;
 
@@ -90,8 +57,8 @@ OESQL;
       $this->getFinishedTaskMap()->getTableName(),
       $this->getFinishedTaskMap()->joinSelectFieldsWithAlias(),
       $this->getTableName(), 
-      join(', ', $this->getSelectFields()),
-      $this->joinSelectFieldsWithAlias('nmf'),
+      join(', ', $this->getTaskMap()->getSelectFields()),
+      $this->getTaskMap()->joinSelectFieldsWithAlias('nmf'),
       $this->joinSelectFieldsWithAlias()
     );
 
