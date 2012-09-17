@@ -758,6 +758,13 @@ CREATE TRIGGER after_insert_delete_active_task_trig AFTER INSERT OR DELETE ON ac
 
 
 --
+-- Name: before_insert_active_task_trig; Type: TRIGGER; Schema: taf; Owner: -
+--
+
+CREATE TRIGGER before_insert_active_task_trig BEFORE INSERT ON active_task FOR EACH ROW EXECUTE PROCEDURE before_insert_active_task();
+
+
+--
 -- Name: task_worker_id_fkey; Type: FK CONSTRAINT; Schema: taf; Owner: -
 --
 
