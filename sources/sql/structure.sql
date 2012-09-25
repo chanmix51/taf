@@ -499,7 +499,7 @@ $$;
 
 CREATE TABLE active_task (
     rank integer NOT NULL,
-    active_since timestamp without time zone DEFAULT now() NOT NULL
+    active_at timestamp without time zone DEFAULT now() NOT NULL
 )
 INHERITS (task);
 
@@ -535,7 +535,7 @@ $_$;
 --
 
 CREATE TABLE finished_task (
-    changed_since timestamp without time zone DEFAULT now() NOT NULL
+    changed_at timestamp without time zone DEFAULT now() NOT NULL
 )
 INHERITS (task);
 
@@ -545,7 +545,7 @@ INHERITS (task);
 --
 
 CREATE TABLE suspended_task (
-    changed_since timestamp without time zone DEFAULT now() NOT NULL
+    changed_at timestamp without time zone DEFAULT now() NOT NULL
 )
 INHERITS (task);
 

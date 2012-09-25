@@ -15,7 +15,7 @@ abstract class ActiveTaskMap extends \Taf\Taf\TaskMap
         $this->object_name  =  'taf.active_task';
 
         $this->addField('rank', 'int4');
-        $this->addField('active_since', 'timestamp');
+        $this->addField('active_at', 'timestamp');
 
         $this->pk_fields = array('task_id');
     }

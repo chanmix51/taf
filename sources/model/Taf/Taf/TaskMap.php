@@ -15,6 +15,16 @@ class TaskMap extends BaseTaskMap
     protected $task_lnk_map;
     protected $task_map;
 
+    public function getSelectFields($alias)
+    {
+        $fields = parent::getSelectFields($alias);
+        $alias = is_null($alias) ? '' : $alias.".";
+
+        $fields['created_since'] = sprintf('age(%screated_at)', $alias);
+
+        return $fields;
+    }
+
     public function getActiveTaskMap(ActiveTaskMap $map = null)
     {
         if (is_null($this->active_task_map))
