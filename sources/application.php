@@ -176,7 +176,10 @@ $app->put('/task/{id}/add_time', function(Request $request, $id) use ($app) {
 
     $task = $app['pomm.connection']
         ->getMapFor('\Taf\Taf\ActiveTask')
-        ->findByPkAndUpdateTime($id, $request->request->get('work_time'));
+        ->updateByPk(
+            array('task_id' => $id),
+            array('work_time' => $request->request->get('work_time'))
+        );
 
     if ($task === false)
     {
