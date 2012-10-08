@@ -514,7 +514,10 @@ CREATE FUNCTION update_rank_active_task(integer, integer) RETURNS SETOF active_t
     UPDATE
         taf.active_task at
     SET
-        rank = at.rank + ( (t.rank - $2) / abs(t.rank - $2) )
+        rank = CASE
+            WHEN t.rank - $2 <> 0 THEN at.rank + ( (t.rank - $2) / abs(t.rank - $2) )
+            ELSE at.rank
+        END 
     FROM
         taf.active_task t
     WHERE

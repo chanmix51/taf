@@ -11,6 +11,9 @@ class FinishedTaskMap extends BaseFinishedTaskMap
 {
   public function finishTask($id)
   {
+      $active_task_map = $this->connection->getMapFor('\Taf\Taf\ActiveTask');
+      $task_map = $this->connection->getMapFor('\Taf\Taf\Task');
+
     $sql = <<<OESQL
 WITH
   no_more_active AS (DELETE FROM %s at WHERE at.task_id = ? RETURNING %s)
@@ -18,12 +21,12 @@ WITH
 OESQL;
 
     $sql = sprintf($sql,
-      $this->getActiveTaskMap()->getTableName(),
-      $this->getActiveTaskMap()->joinSelectFieldsWithAlias(),
+      $active_task_map->getTableName(),
+      $active_task_map->formatFieldsWithAlias('getSelectFields'),
       $this->getTableName(), 
-      join(', ', $this->getTaskMap()->getSelectFields()),
-      $this->getTaskMap()->joinSelectFieldsWithAlias('nma'),
-      $this->joinSelectFieldsWithAlias()
+      $task_map->formatFields('getFields'),
+      $task_map->formatFieldsWithAlias('getFields', 'nma'),
+      $this->formatFieldsWithAlias('getSelectFields')
     );
 
     return $this->query($sql, array($id))->current();

@@ -11,21 +11,24 @@ class SuspendedTaskMap extends BaseSuspendedTaskMap
 {
   public function suspendTask($id)
   {
-    $sql = <<<EOSQL
+      $active_task_map = $this->connection->getMapFor('\Taf\Taf\ActiveTask');
+      $task_map        = $this->connection->getMapFor('\Taf\Taf\Task');
+
+      $sql = <<<EOSQL
 WITH
   no_more_active AS ( DELETE FROM %s at WHERE at.task_id = ? RETURNING %s)
   INSERT INTO %s (%s) SELECT %s FROM no_more_active nma RETURNING %s
 EOSQL;
 
-    $sql = sprintf($sql, 
-      $this->getActiveTaskMap()->getTableName(),
-      $this->getActiveTaskMap()->joinSelectFieldsWithAlias('at'),
-      $this->getTableName(),
-      join(', ', $this->getTaskMap()->getSelectFields()),
-      $this->getTaskMap()->joinSelectFieldsWithAlias('nma'),
-      $this->joinSelectFieldsWithAlias()
-    );
+      $sql = sprintf($sql, 
+          $active_task_map->getTableName(),
+          $active_task_map->formatFieldsWithAlias('getSelectFields', 'at'),
+          $this->getTableName(),
+          $task_map->formatFields('getFields'),
+          $task_map->formatFieldsWithAlias('getFields', 'nma'),
+          $this->formatFieldsWithAlias('getSelectFields')
+      );
 
-    return $this->query($sql, array($id))->current();
+      return $this->query($sql, array($id))->current();
   }
 }

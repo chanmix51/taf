@@ -7,20 +7,52 @@ $app = require "bootstrap.php";
 
 // MIDDLEWARES
 $must_be_logged = function() use ($app) {
-    if (!$app['request']->request->has('session_token'))
+    $worker_map = $app['pomm.connection']->getMapFor('\Taf\Taf\Worker');
+
+    if ($app['session']->has('token'))
     {
-        return $app->redirect($app['url_generator']->generate('homepage'));
+        $worker = $worker_map->findByPk(array('worker_id' => $app['session']->get('token')));
+
+        if ($worker)
+        {
+            $app['worker'] = $worker;
+
+            return;
+        }
     }
 
-    $worker = $app['pomm.connection']
-        ->getMapFor('\Taf\Taf\Worker')
-        ->findWhere("session_token = ? AND session_start + interval '1800 seconds' > now()", array($app['request']->request->get('session_token')))
-        ->current();
+    require PROJECT_DIR."/vendor/fp/lightopenid/openid.php";
+    $openid = new \LightOpenID($_SERVER['SERVER_NAME']);
 
-    if ($worker === false)
+    if (!$openid->mode)
     {
-        return $app->redirect($app['url_generator']->generate('homepage'));
+        $openid->identity = 'https://www.google.com/accounts/o8/id';
+        $openid->required = array(
+            //        'namePerson',
+            //        'namePerson/first',
+            //        'namePerson/last',
+            'email' => 'contact/email',
+        );
+
+        return $app->redirect($openid->authUrl());
     }
+    elseif ($openid->validate())
+    {
+        $attr = $openid->getAttributes();
+        $worker = $worker_map->findWhere('email = ?', array($attr['email']))->current();
+
+        if (!$worker)
+        {
+            $worker = $worker_map->createAndSaveObject($attr);
+        }
+
+        $app['worker'] = $worker;
+        $app['session']->set('token', $worker['worker_id']);
+
+        return;
+    }
+
+    return new Response('Forbidden', 403);
 };
 
 $must_be_ajax = function() use ($app) {
@@ -32,7 +64,11 @@ $must_be_ajax = function() use ($app) {
 
 // CONTROLLERS
 
-$app->get('/task/{slug}', function($slug) use ($app) {
+$app->get('/', function() use ($app) {
+    return $app['twig']->render('tasks.html.twig');
+})->bind('homepage')->before($must_be_logged);
+
+$app->get('/tasks/{slug}', function($slug) use ($app) {
 
     $task = $app['pomm.connection']
         ->getMapFor('\Taf\Taf\Task')
@@ -55,7 +91,7 @@ $app->get('/tasks', function(Request $request) use ($app) {
     {
         $data = array_merge($data, $app['pomm.connection']
             ->getMapFor('\Taf\Taf\ActiveTask')
-            ->findAll('ORDER BY rank DESC LIMIT 25')
+            ->findAll('ORDER BY rank DESC LIMIT 12')
             ->extract('active_tasks'));
     }
 
@@ -78,26 +114,26 @@ $app->get('/tasks', function(Request $request) use ($app) {
     return $app->json($data);
 })->bind('list')->before($must_be_ajax);
 
-$app->post('/tasks/move', function(Request $request) use ($app) {
+$app->put('/tasks/{id}/move', function($id, Request $request) use ($app) {
 
-    if (!($request->request->has('newRank') and $request->request->has('taskId')))
+    if (!($request->request->has('newRank')))
     {
-        return new Response("Expected parameters 'taskId' and 'newRank'.", 400);
+        return new Response("Expected parameters 'newRank'.", 400);
     }
 
-    $tasks = $app['pomm.connection']
+    $task = $app['pomm.connection']
         ->getMapFor('\Taf\Taf\ActiveTask')
-        ->moveTask($request->request->get('taskId'), $request->request->get('newRank'))
+        ->moveTask($id, $request->request->get('newRank'))
         ;
-    if ($tasks->count() == 0)
+    if (!$task)
     {
-        return new Response('Error while updating rows.', 500);
+        return new Response(sprintf("Unknown task id = '%d'.", $id), 404);
     }
 
-    return new Response('ok', 201);
+    return new Response($app->json($task->extract()));
 })->bind('task_move')->before($must_be_ajax);
 
-$app->post('/task/{id}/suspend', function($id) use ($app) {
+$app->post('/tasks/{id}/suspend', function($id) use ($app) {
     $suspended_task = $app['pomm.connection']
         ->getMapFor('\Taf\Taf\SuspendedTask')
         ->suspendTask($id);
@@ -111,10 +147,10 @@ $app->post('/task/{id}/suspend', function($id) use ($app) {
 
 })->bind('suspend')->before($must_be_ajax);
 
-$app->post('/task/{id}/unsuspend', function($id) use ($app) {
+$app->post('/tasks/{id}/unsuspend', function($id) use ($app) {
     $active_task = $app['pomm.connection']
         ->getMapFor('\Taf\Taf\ActiveTask')
-        ->unsuspendTask($id, $app['request']->request->get('rank'));
+        ->unsuspendTask($id, $app['request']->query->get('rank'));
 
     if ($active_task === false)
     {
@@ -125,7 +161,7 @@ $app->post('/task/{id}/unsuspend', function($id) use ($app) {
 
 })->bind('unsuspend')->before($must_be_ajax);
 
-$app->post('/task/{id}/finish', function($id) use ($app) {
+$app->post('/tasks/{id}/finish', function($id) use ($app) {
     $finished_task = $app['pomm.connection']
         ->getMapFor('\Taf\Taf\FinishedTask')
         ->finishTask($id);
@@ -139,10 +175,10 @@ $app->post('/task/{id}/finish', function($id) use ($app) {
 
 })->bind('finish')->before($must_be_ajax);
 
-$app->post('/task/{id}/unfinish', function($id) use ($app) {
+$app->post('/tasks/{id}/unfinish', function($id) use ($app) {
     $active_task = $app['pomm.connection']
         ->getMapFor('\Taf\Taf\ActiveTask')
-        ->unFinishTask($id, $app['request']->request->get('rank'));
+        ->unFinishTask($id, $app['request']->query->get('rank'));
 
     if ($active_task === false)
     {
@@ -188,5 +224,11 @@ $app->put('/task/{id}/add_time', function(Request $request, $id) use ($app) {
 
     return $app->json(array('active_task' => $task->extract()));
 })->bind('set_work_time')->before($must_be_ajax);
+
+$app->get('/logout', function() use ($app) {
+    $app['session']->remove('token');
+
+    return $app->redirect($app['url_generator']->generate('homepage'));
+})->bind('logout');
 
 return $app;
