@@ -33,7 +33,12 @@ $must_be_logged = function() use ($app) {
 
     if (!$worker)
     {
-        $worker = $worker_map->createAndSaveObject((Array) $auth_data->getUserProfile());
+        $worker = $worker_map->createAndSaveObject(array('email' => $auth_data->getUserProfile()->email, 'extra_data' => (Array) $auth_data->getUserProfile()));
+    }
+    else
+    {
+        $worker['extra_data'] = (array) $auth_data->getUserProfile();
+        $worker_map->updateOne($worker, array('extra_data'));
     }
 
     $app['worker'] = $worker;
