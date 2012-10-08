@@ -36,6 +36,7 @@ $app->register(new Pomm\Silex\PommServiceProvider(), array(
 $app['loader'] = $loader;
 $app['pomm.connection'] = $app['pomm']
     ->getDatabase()
+    ->registerTypeForConverter('taf.email_address', 'String')
     ->createConnection();
 
 // set DEBUG mode or not

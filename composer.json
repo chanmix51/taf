@@ -2,7 +2,7 @@
     "minimum-stability": "dev",
     "require": {
         "pomm/pomm-service-provider": "dev-master",
-        "fp/lightopenid": "dev-master",
+        "hybridauth/hybridauth": "dev-master",
         "twig/twig": "dev-master"
     }
 }

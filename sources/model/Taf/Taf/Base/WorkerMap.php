@@ -15,10 +15,7 @@ abstract class WorkerMap extends BaseObjectMap
 
         $this->addField('worker_id', 'int4');
         $this->addField('email', 'taf.email_address');
-        $this->addField('first_name', 'varchar');
-        $this->addField('last_name', 'varchar');
-        $this->addField('session_token', 'bpchar');
-        $this->addField('session_start', 'timestamp');
+        $this->addField('extra_data', 'public.hstore');
 
         $this->pk_fields = array('worker_id');
     }
