@@ -607,10 +607,7 @@ CREATE SEQUENCE worker_id_seq
 CREATE TABLE worker (
     worker_id integer DEFAULT nextval('worker_id_seq'::regclass) NOT NULL,
     email email_address NOT NULL,
-    first_name character varying NOT NULL,
-    last_name character varying NOT NULL,
-    session_token character(32),
-    session_start timestamp without time zone
+    extra_data hstore
 );
 
 

@@ -37,6 +37,7 @@ $app['loader'] = $loader;
 $app['pomm.connection'] = $app['pomm']
     ->getDatabase()
     ->registerTypeForConverter('taf.email_address', 'String')
+    ->registerConverter('HStore', new Pomm\Converter\PgHStore(), array('public.hstore', 'hstore'))
     ->createConnection();
 
 // set DEBUG mode or not
