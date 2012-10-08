@@ -42,7 +42,7 @@ $must_be_logged = function() use ($app) {
     }
 
     $app['worker'] = $worker;
-    $app['session']->set('token', $worker['worker_id']);
+    $app['session']->set('auth_token', $worker['worker_id']);
 
 
     return;
@@ -95,7 +95,7 @@ $app->get('/tasks', function(Request $request) use ($app) {
     {
         $data = array_merge($data, $app['pomm.connection']
             ->getMapFor('\Taf\Taf\ActiveTask')
-            ->findAll('ORDER BY rank DESC LIMIT 12')
+            ->findWhere('worker_id = ?', array($app['session']->get('auth_token')), 'ORDER BY rank DESC LIMIT 12')
             ->extract('active_tasks'));
     }
 
@@ -103,7 +103,7 @@ $app->get('/tasks', function(Request $request) use ($app) {
     {
          $data = array_merge($data, $app['pomm.connection']
             ->getMapFor('\Taf\Taf\FinishedTask')
-            ->findAll('ORDER BY created_at DESC LIMIT 5')
+            ->findWhere('worker_id = ?', array($app['session']->get('auth_token')), 'ORDER BY rank DESC LIMIT 5')
             ->extract('finished_tasks'));
     }
 
@@ -111,7 +111,7 @@ $app->get('/tasks', function(Request $request) use ($app) {
     {
         $data = array_merge($data, $app['pomm.connection']
             ->getMapFor('\Taf\Taf\SuspendedTask')
-            ->findAll('ORDER BY created_at DESC LIMIT 5')
+            ->findWhere('worker_id = ?', array($app['session']->get('auth_token')), 'ORDER BY rank DESC LIMIT 5')
             ->extract('suspended_tasks'));
     }
 
