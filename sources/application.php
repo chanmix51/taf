@@ -258,6 +258,23 @@ $app->put('/task/{id}/add_time', function(Request $request, $id) use ($app) {
 })->bind('set_work_time')->before($must_be_ajax);
 
 /**
+ * Get current worker info
+ * @ajax
+ **/
+$app->get('/workers/current', function() use ($app) {
+    $worker = $app['pomm.connection']
+        ->getMapFor('\Taf\Taf\Worker')
+        ->findByPk(array('worker_id' => $app['session']->get('auth_token')));
+
+    if ($worker === false)
+    {
+        return new Response('No current user.', 404);
+    }
+
+    return $app->json(array('current_worker' => $worker->extract()));
+})->before($must_be_ajax)->bind('get_current_worker');
+
+/**
  * logout
  **/
 $app->get('/logout', function() use ($app) {

@@ -3,15 +3,20 @@
 {% block title %}Your tasks{% endblock %}
 
 {% block application %}
-<div class="span8" ng-controller="getTaskLists">
-<h3>Active Tasks</h3>
-<ul>
 {% raw %}
-  <li class="active_task" id="{{ task.task_id }}" ng-repeat="task in active_tasks">
-      <span style="float: left;"><img src="/images/icons/asterisk_orange.png" />&nbsp;</span>
-      <span><h3>{{ task.title }}</h3>Created {{ task.created_since.y }} years {{ task.created_since.m }} months {{ task.created_since.d }} days ago. Total spent time: {{ task.work_time }} s. <button class="btn btn-mini btn-primary">Open</button></span>
-  </li>
-{% endraw %}
-</ul>
+<div class="span12" id="main_board" ng-controller="getTaskLists">
+  <div>
+    {{ current_worker.extra_data.displayName }} <img src="http://www.gravatar.com/avatar/{{ current_worker.gravatar }}" /> 
+  </div>
+  <div class="span8">
+    <h3>Active Tasks</h3>
+    <ul>
+      <li class="active_task" id="{{ task.task_id }}" ng-repeat="task in active_tasks">
+        <span style="float: left;"><img src="/images/icons/asterisk_orange.png" />&nbsp;</span>
+        <span><h3>{{ task.title }}</h3>Created {{ task.created_since.y }} years {{ task.created_since.m }} months {{ task.created_since.d }} days ago. Total spent time: {{ task.work_time }} s. <button class="btn btn-mini btn-primary">Open</button></span>
+      </li>
+    </ul>
+  </div>
 </div>
+{% endraw %}
 {% endblock %}
