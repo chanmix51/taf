@@ -103,7 +103,7 @@ $app->get('/tasks', function(Request $request) use ($app) {
     {
          $data = array_merge($data, $app['pomm.connection']
             ->getMapFor('\Taf\Taf\FinishedTask')
-            ->findWhere('worker_id = ?', array($app['session']->get('auth_token')), 'ORDER BY rank DESC LIMIT 5')
+            ->findWhere('worker_id = ?', array($app['session']->get('auth_token')), 'ORDER BY changed_at DESC LIMIT 5')
             ->extract('finished_tasks'));
     }
 
@@ -111,7 +111,7 @@ $app->get('/tasks', function(Request $request) use ($app) {
     {
         $data = array_merge($data, $app['pomm.connection']
             ->getMapFor('\Taf\Taf\SuspendedTask')
-            ->findWhere('worker_id = ?', array($app['session']->get('auth_token')), 'ORDER BY rank DESC LIMIT 5')
+            ->findWhere('worker_id = ?', array($app['session']->get('auth_token')), 'ORDER BY changed_at DESC LIMIT 5')
             ->extract('suspended_tasks'));
     }
 
