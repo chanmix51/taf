@@ -38,7 +38,33 @@ class TaskMap extends BaseTaskMap
         return $this
             ->connection
             ->getMapFor(sprintf("\\Taf\\Taf\\%s", \Pomm\External\sfInflector::camelize($task_lnk['relname'])))
-            ->findWhere("slug = ?", array($slug))
+            ->findWithWorkerWhere(new Where("slug = ?", array($slug)))
             ->current();
     }
+
+    public function findWithWorkerWhere(Where $where)
+    {
+        $worker_map = $this->connection->getMapFor('\Taf\Taf\Worker');
+        $sql = <<<EOSQL
+SELECT
+  %s,
+  %s
+FROM
+  %s task
+    NATURAL JOIN %s worker
+WHERE
+  %s
+EOSQL;
+        $sql = sprintf($sql,
+            $this->formatFieldsWithAlias('getSelectFields', 'task'),
+            $worker_map->formatFieldsWithAlias('getRemoteSelectFields', 'worker'),
+            $this->getTableName(),
+            $worker_map->getTableName(),
+            (string) $where
+        );
+
+        return  $this->query($sql, $where->getValues())
+            ->registerFilter(array($worker_map, 'createFromForeign'));
+    }
+
 }

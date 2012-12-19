@@ -5,7 +5,7 @@ namespace Taf\Taf\Base;
 use \Pomm\Object\BaseObjectMap;
 use \Pomm\Exception\Exception;
 
-abstract class TaskLnkMap extends BaseObjectMap
+abstract class TaskLnkMap extends \Taf\BaseMap
 {
     public function initialize()
     {

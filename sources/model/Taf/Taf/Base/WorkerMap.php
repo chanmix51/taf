@@ -5,7 +5,7 @@ namespace Taf\Taf\Base;
 use \Pomm\Object\BaseObjectMap;
 use \Pomm\Exception\Exception;
 
-abstract class WorkerMap extends BaseObjectMap
+abstract class WorkerMap extends \Taf\BaseMap
 {
     public function initialize()
     {

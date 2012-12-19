@@ -9,6 +9,7 @@ $scan = new Pomm\Tools\ScanSchemaTool(array(
     'database' => $app['pomm']->getDatabase(),
     'prefix_dir' => PROJECT_DIR."/sources/model",
     'exclude' => array('deploys', 'view_functions'),
+    'extends' => '\Taf\BaseMap',
     ));
 $scan->execute();
 $scan->getOutputStack()->setLevel(255);
