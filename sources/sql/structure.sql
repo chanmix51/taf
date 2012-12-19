@@ -254,7 +254,7 @@ CREATE SEQUENCE worker_id_seq
 CREATE TABLE worker (
     worker_id integer DEFAULT nextval('worker_id_seq'::regclass) NOT NULL,
     email email_address NOT NULL,
-    extra_data hstore
+    extra_data public.hstore
 );
 
 

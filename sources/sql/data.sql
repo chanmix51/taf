@@ -73,9 +73,9 @@ COPY suspended_task (task_id, title, slug, work_time, created_at, worker_id, cha
 -- Data for Name: worker; Type: TABLE DATA; Schema: taf; Owner: -
 --
 
-COPY worker (worker_id, email, first_name, last_name, session_token, session_start) FROM stdin;
-2	gregoire.hubert@knplabs.com	greg (knp)	hubert	\N	\N
-1	hubert.greg@gmail.com	grégoire	hubert	64a4e8faed1a1aa0bf8bf0fc84938d25	2012-08-30 09:17:33.758522
+COPY worker (worker_id, email) FROM stdin;
+2	gregoire.hubert@knplabs.com
+1	hubert.greg@gmail.com
 \.
 
 
